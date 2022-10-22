@@ -26,13 +26,18 @@ ReportDefinitions:
     type: string
     source: wns
     total: false
+  - name: payername
+    label: report.wns.payername
+    type: string
+    source: wns
+    total: false
   - name: totalamountpaid
     label: report.wns.totalamountpaid
     type: number
     source: wns
     total: false
-  - name: payername
-    label: report.wns.payername
+  - name: chequeno
+    label: report.wns.chequeno
     type: string
     source: wns
     total: false
@@ -41,16 +46,6 @@ ReportDefinitions:
     type: string
     source: wns
     total: false
-  - name: chequeno
-    label: report.wns.chequeno
-    type: string
-    source: wns
-    total: false
-  - name: uuid
-    label: report.wns.uuid
-    type: string
-    source: wns
-    showColumn: false
   searchParams:
   - name: fromDate
     label: FromDate
@@ -76,7 +71,7 @@ ReportDefinitions:
     type: singlevaluelist
     source: wns
     isMandatory: false
-    pattern: http://egov-mdms-service:8080/egov-mdms-service/v1/_get?tenantId=pb&moduleName=BillingService&masterName=BusinessService&filter=%5B?(@.type=='Adhoc')%5D|$.MdmsRes.BillingService.BusinessService.*.code|$.MdmsRes.BillingService.BusinessService.*.code
+    pattern: 'list://WS:Water,SW:Sewerage'
     wrapper: true
     isLocalisationRequired: true
     localisationPrefix: BILLINGSERVICE_BUSINESSSERVICE_
@@ -84,12 +79,12 @@ ReportDefinitions:
   - name: collectionOperator
     label: CollectionOperator
     type: singlevaluelist
-    pattern: http://egov-hrms:8080/egov-hrms/employees/_search?tenantId=$tenantid&roles=FSM_COLLECTOR|$.Employees[*].user.id|$.Employees[*].user.name|$.Employees[*].user.username
+    pattern: http://egov-hrms:8080/egov-hrms/employees/_search?tenantId=$tenantid&roles=SW_CEMP,WS_CEMP|$.Employees[*].user.id|$.Employees[*].user.name|$.Employees[*].user.username
     wrapper: true
     source: wns
     isMandatory: false
     searchClause: AND egcl_payment.createdby = $collectionOperator
-  query: select receiptnumber, eg_user.uuid as uuid, to_char(To_timestamp(receiptdate / 1000), 'DD/MM/YYYY') as receiptdate, CASE WHEN egcl_bill.businessservice='SW' THEN 'Sewerage' ELSE NULL END as service,eg_user.name, totalamountpaid,payername, transactionnumber, CASE WHEN paymentmode='CHEQUE' THEN instrumentnumber ELSE null END as chequeno from egcl_payment inner join egcl_paymentdetail on egcl_payment.id=egcl_paymentdetail.paymentid inner join egcl_bill on egcl_paymentdetail.billid=egcl_bill.id inner join eg_sw_connection on egcl_bill.consumercode=connectionno inner join eg_sw_connectionholder on eg_sw_connection.id=eg_sw_connectionholder.connectionid inner join eg_user on eg_sw_connectionholder.userid=eg_user.uuid where eg_sw_connection.tenantid=$tenantid  UNION ALL select receiptnumber, eg_user.uuid as uuid, to_char(To_timestamp(receiptdate / 1000), 'DD/MM/YYYY') as receiptdate, CASE WHEN egcl_bill.businessservice='WS' THEN 'Water' ELSE NULL END as service,eg_user.name, totalamountpaid, payername, transactionnumber , CASE WHEN paymentmode='CHEQUE' THEN instrumentnumber ELSE null END as chequeno from egcl_payment inner join egcl_paymentdetail on egcl_payment.id=egcl_paymentdetail.paymentid inner join egcl_bill on egcl_paymentdetail.billid=egcl_bill.id inner join eg_ws_connection on egcl_bill.consumercode=connectionno inner join eg_ws_connectionholder on eg_ws_connection.id=eg_ws_connectionholder.connectionid inner join eg_user on eg_ws_connectionholder.userid=eg_user.uuid where eg_ws_connection.tenantid=$tenantid
+  query: select receiptnumber, to_char( To_timestamp(receiptdate / 1000), 'DD/MM/YYYY' ) as receiptdate, CASE WHEN egcl_bill.businessservice = 'SW' THEN 'Sewerage' WHEN egcl_bill.businessservice='SW.ONE_TIME_FEE' THEN 'SW_One_Time_Fee' ELSE NULL END as service, totalamountpaid, payername, transactionnumber, CASE WHEN paymentmode = 'CHEQUE' THEN instrumentnumber ELSE null END as chequeno from egcl_payment inner join egcl_paymentdetail on egcl_payment.id = egcl_paymentdetail.paymentid inner join egcl_bill on egcl_paymentdetail.billid = egcl_bill.id where egcl_bill.tenantid = $tenantid and egcl_bill.businessservice in ('SW','SW.ONE_TIME_FEE') UNION ALL select receiptnumber, to_char( To_timestamp(receiptdate / 1000), 'DD/MM/YYYY' ) as receiptdate, CASE WHEN egcl_bill.businessservice = 'WS' THEN 'Water' WHEN egcl_bill.businessservice='WS.ONE_TIME_FEE' THEN 'Ws_One_Time_Fee' ELSE NULL END as service, totalamountpaid, payername, transactionnumber, CASE WHEN paymentmode = 'CHEQUE' THEN instrumentnumber ELSE null END as chequeno from egcl_payment inner join egcl_paymentdetail on egcl_payment.id = egcl_paymentdetail.paymentid inner join egcl_bill on egcl_paymentdetail.billid = egcl_bill.id where egcl_bill.tenantid = $tenantid and egcl_bill.businessservice in ('WS','WS.ONE_TIME_FEE')
 
 - reportName: WnsCollectionRegisterReport
   decryptionPathId: WnsCollectionRegisterReport
@@ -102,6 +97,8 @@ ReportDefinitions:
     type: string
     source: wns
     total: false
+    localisationPrefix: TENANTS_MOHALLA_
+    isLocalisationRequired: true
   - name: service
     label: report.wns.service
     type: string
@@ -160,7 +157,7 @@ ReportDefinitions:
     type: singlevaluelist
     source: wns
     isMandatory: false
-    pattern: http://egov-mdms-service:8080/egov-mdms-service/v1/_get?tenantId=pb&moduleName=BillingService&masterName=BusinessService&filter=%5B?(@.type=='Adhoc')%5D|$.MdmsRes.BillingService.BusinessService.*.code|$.MdmsRes.BillingService.BusinessService.*.code
+    pattern: 'list://WS:Water,SW:Sewerage'
     wrapper: true
     isLocalisationRequired: true
     localisationPrefix: BILLINGSERVICE_BUSINESSSERVICE_
@@ -198,6 +195,8 @@ ReportDefinitions:
     type: string
     source: wns
     total: false
+    localisationPrefix: TENANTS_MOHALLA_
+    isLocalisationRequired: true
   - name: service
     label: report.wns.service
     type: string
@@ -224,37 +223,34 @@ ReportDefinitions:
     localisationPrefix: TENANTS_MOHALLA_
     isLocalisationRequired: true
     isMandatory: false
-    searchClause: AND locality = $locality
+    searchClause: AND conn.locality = $locality
   - name: serviceName
     label: reports.wns.serviceName
     type: singlevaluelist
     source: wns
-    pattern: http://egov-mdms-service:8080/egov-mdms-service/v1/_get?tenantId=pb&moduleName=BillingService&masterName=BusinessService&filter=%5B?(@.type=='Adhoc')%5D|$.MdmsRes.BillingService.BusinessService.*.code|$.MdmsRes.BillingService.BusinessService.*.code
-    wrapper: true
-    isLocalisationRequired: true
-    localisationPrefix: BILLINGSERVICE_BUSINESSSERVICE_
+    pattern: 'list://WS:Water,SW:Sewerage'
     isMandatory: false
-    searchClause: AND egcl_bill.businessservice = $serviceName
+    searchClause: AND CASE WHEN $serviceName='WS' THEN res.consumercode like 'WS%' WHEN  $serviceName='SW' THEN res.consumercode like 'SW%' END
   - name: usageType
     label: reports.wns.usageType
     source: wns
     type: singlevaluelist
-    pattern: http://egov-mdms-service:8080/egov-mdms-service/v1/_get?tenantId=$tenantid&moduleName=ws-services-calculation&masterName=PropertyUsageType&filter=%24.%2A%5B%3F%28%40.code%20%3D~%20%2F%5BA-Z%5D%2A%5C.%5BA-Z%5D%2A%5C.%5BA-Z%5D%2A%5C.%5BA-z%5D%2A%2F%29%5D|$.MdmsRes.ws-services-calculation.PropertyUsageType.*|$.MdmsRes.ws-services-calculation.PropertyUsageType.*.name
+    pattern: http://egov-mdms-service:8080/egov-mdms-service/v1/_get?tenantId=$tenantid&moduleName=ws-services-calculation&masterName=PropertyUsageType|$.MdmsRes.ws-services-calculation.PropertyUsageType.*.code|$.MdmsRes.ws-services-calculation.PropertyUsageType.*.name
     wrapper: true
     isMandatory: false
     localisationPrefix: WATERSERVICE_USAGE_TYPE_
     isMandatory: false
-    searchClause: AND eg_pt_property.usagecategory = $usageType
+    searchClause: AND uuids.usagecategory = $usageType
   - name: connectionType
     label: reports.wns.connectionType
     type: singlevaluelist
-    pattern: http://egov-mdms-service:8080/egov-mdms-service/v1/_get?tenantId=$tenantid&moduleName=ws-services-masters&masterName=connectionType&filter=%24.%2A%5B%3F%28%40.code%20%3D~%20%2F%5BA-Z%5D%2A%5C.%5BA-Z%5D%2A%5C.%5BA-Z%5D%2A%5C.%5BA-z%5D%2A%2F%29%5D|$.MdmsRes.ws-services-masters.connectionType.*.code|$.MdmsRes.ws-services-masters.connectionType.*.name
+    pattern: http://egov-mdms-service:8080/egov-mdms-service/v1/_get?tenantId=$tenantid&moduleName=ws-services-masters&masterName=connectionType|$.MdmsRes.ws-services-masters.connectionType.*.code|$.MdmsRes.ws-services-masters.connectionType.*.name
     wrapper: true
     isMandatory: false
     localisationPrefix: WATERSEREVICE_CONNECTION_TYPE_
     isLocalisationRequired: false
     source: wns
     isMandatory: false
-    searchClause: AND connectiontype = $connectionType
-  query: select consumercode, name, locality, eg_user.uuid, CASE WHEN egcl_bill.businessservice='WS' THEN 'Water' ELSE NULL END as service, sum(totaldue) as totaldue from egcl_payment inner join egcl_paymentdetail on egcl_payment.id=egcl_paymentdetail.paymentid inner join egcl_bill on egcl_paymentdetail.billid=egcl_bill.id inner join eg_ws_connection on egcl_bill.consumercode=connectionno inner join eg_ws_service on eg_ws_connection.id=eg_ws_service.connection_id inner join eg_ws_connectionholder on eg_ws_service.connection_id=eg_ws_connectionholder.connectionid inner join eg_user on eg_ws_connectionholder.userid=eg_user.uuid inner join eg_pt_property on eg_pt_property.propertyid = property_id where eg_ws_connection.tenantid=$tenantid UNION  ALL select consumercode, name, locality, eg_user.uuid as uuid, CASE WHEN egcl_bill.businessservice='SW' THEN 'Sewerage' ELSE NULL END as service, sum(totaldue) as totaldue from egcl_payment inner join egcl_paymentdetail on egcl_payment.id=egcl_paymentdetail.paymentid inner join egcl_bill on egcl_paymentdetail.billid=egcl_bill.id inner join eg_sw_connection on egcl_bill.consumercode=connectionno inner join eg_sw_service on eg_sw_connection.id=eg_sw_service.connection_id inner join eg_sw_connectionholder on eg_sw_service.connection_id=eg_sw_connectionholder.connectionid inner join eg_user on eg_sw_connectionholder.userid=eg_user.uuid inner join eg_pt_property on eg_pt_property.propertyid = property_id where eg_sw_connection.tenantid=$tenantid
-  groupby: GROUP BY consumercode, name, locality, service,  eg_user.uuid
+    searchClause: AND s.connectiontype = $connectionType
+  query: select res.consumercode,res.totaldue,'Water' as service, name, uuid,conn.locality from (select consumercode,sum(totalamount) as totaldue, billid from (select id,status from egbs_bill_v1) as b inner join egbs_billdetail_v1 on b.id=egbs_billdetail_v1.billid where b.status='ACTIVE' and expirydate<(extract(epoch from now())*1000) group by consumercode,billid)res inner join eg_ws_connection as conn on res.consumercode=conn.connectionno inner join (select connection_id,connectiontype from eg_ws_service)as s ON conn.id=s.connection_id inner join (select uuid1.userid as chuuid, uuid2.userid as propOwnuuid,uuid1.property_id as propertyid,uuid2.usagecategory from (select ch.userid ,property_id from (select connectionid,userid from eg_ws_connectionholder)as ch inner join (select id,property_id from eg_ws_connection) as conn on ch.connectionid=conn.id) as uuid1 inner join (select pto.userid, prop.propertyid, prop.usagecategory from (select userid,propertyid from eg_pt_owner) as pto inner join (select id,propertyid,usagecategory from eg_pt_property) as prop ON prop.id = pto.propertyid where prop.propertyid in (select property_id from eg_ws_connection)) as uuid2 on uuid1.property_id=uuid2.propertyid group by chuuid, propOwnuuid, uuid1.property_id, uuid2.usagecategory) as uuids ON uuids.propertyid=conn.property_id inner join (select uuid,name from eg_user) as usr on uuid = (CASE WHEN uuids.chuuid IS NOT NULL THEN uuids.chuuid ELSE uuids.propOwnuuid END) where conn.tenantid=$tenantid  and res.totaldue>0 
+  groupby: GROUP BY res.consumercode,res.totaldue,service,usr.name,usr.uuid,locality

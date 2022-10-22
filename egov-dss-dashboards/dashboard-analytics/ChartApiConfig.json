@@ -7229,7 +7229,7 @@
       {
         "module": "IFIX",
         "indexName": "ifix-fiscal-events",
-        "aggrQuery": "{\"aggs\":{\"totalOutstandingAmount\":{\"sum\":{\"script\":{\"lang\":\"painless\",\"source\":\"long totalAmountPaid=0;long totalBillAmount=0;if(params['_source']['Data']['eventType']=='Bill'){for(int i=0;i<params['_source']['Data']['amountDetails'].length;++i){totalBillAmount=totalBillAmount+params['_source']['Data']['amountDetails'][i]['amount'];}}else if(params['_source']['Data']['eventType']=='Receipt'){for(int i=0;i<params['_source']['Data']['amountDetails'].length;++i){totalAmountPaid=totalAmountPaid+params['_source']['Data']['amountDetails'][i]['amount'];}}return totalBillAmount-totalAmountPaid;\"}}}}}",
+        "aggrQuery": "{\"aggs\":{\"totalOutstandingAmount\":{\"sum\":{\"script\":{\"lang\":\"painless\",\"source\":\"long totalDemandAmount=0;long totalBillAmount=0;if(params['_source']['Data']['eventType']=='Demand'){for(int i=0;i<params['_source']['Data']['amountDetails'].length;++i){totalDemandAmount=totalDemandAmount+params['_source']['Data']['amountDetails'][i]['amount'];}}else if(params['_source']['Data']['eventType']=='Bill'){for(int i=0;i<params['_source']['Data']['amountDetails'].length;++i){totalBillAmount=totalBillAmount+params['_source']['Data']['amountDetails'][i]['amount'];}}return totalDemandAmount-totalBillAmount;\"}}}}}",
         "requestQueryMap": "{\"wardId\" : \"domainObject.ward.name.keyword\",\r\n  \"module\" : \"dataObject.paymentDetails.businessService.keyword\", \n\"tenantId\" : \"dataObject.tenantId\"}",
         "dateRefField": "Data.eventTime"
       }
@@ -7251,7 +7251,7 @@
       {
         "module": "IFIX",
         "indexName": "ifix-fiscal-events",
-        "aggrQuery": "{\"aggs\":{\"totalOutstandingAmount\":{\"sum\":{\"script\":{\"lang\":\"painless\",\"source\":\"long totalAmountPaid=0;long totalBillAmount=0;if(params['_source']['Data']['eventType']=='Bill'){for(int i=0;i<params['_source']['Data']['amountDetails'].length;++i){totalBillAmount=totalBillAmount+params['_source']['Data']['amountDetails'][i]['amount'];}}else if(params['_source']['Data']['eventType']=='Receipt'){for(int i=0;i<params['_source']['Data']['amountDetails'].length;++i){totalAmountPaid=totalAmountPaid+params['_source']['Data']['amountDetails'][i]['amount'];}}return totalBillAmount-totalAmountPaid;\"}}}}}",
+        "aggrQuery": "{\"aggs\":{\"totalOutstandingAmount\":{\"sum\":{\"script\":{\"lang\":\"painless\",\"source\":\"long totalCollectionAmount=0;long totalDemandAmount=0;if(params['_source']['Data']['eventType']=='Demand'){for(int i=0;i<params['_source']['Data']['amountDetails'].length;++i){totalDemandAmount=totalDemandAmount+params['_source']['Data']['amountDetails'][i]['amount'];}}else if(params['_source']['Data']['eventType']=='Receipt'){for(int i=0;i<params['_source']['Data']['amountDetails'].length;++i){totalCollectionAmount=totalCollectionAmount+params['_source']['Data']['amountDetails'][i]['amount'];}}return totalDemandAmount-totalCollectionAmount;\"}}}}}",
         "requestQueryMap": "{\"wardId\" : \"domainObject.ward.name.keyword\",\r\n  \"module\" : \"dataObject.paymentDetails.businessService.keyword\", \n\"tenantId\" : \"dataObject.tenantId\"}",
         "dateRefField": "Data.eventTime"
       }
@@ -7273,17 +7273,17 @@
       {
         "module": "IFIX",
         "indexName": "ifix-fiscal-events",
-        "aggrQuery": "{\"aggs\":{\"totalOutstandingAmount\":{\"sum\":{\"script\":{\"lang\":\"painless\",\"source\":\"long totalAmountPaid=0;long totalBillAmount=0;if(params['_source']['Data']['eventType']=='Bill'){for(int i=0;i<params['_source']['Data']['amountDetails'].length;++i){totalBillAmount=totalBillAmount+params['_source']['Data']['amountDetails'][i]['amount'];}}else if(params['_source']['Data']['eventType']=='Receipt'){for(int i=0;i<params['_source']['Data']['amountDetails'].length;++i){totalAmountPaid=totalAmountPaid+params['_source']['Data']['amountDetails'][i]['amount'];}}return totalBillAmount-totalAmountPaid;\"}}}}}",
+        "aggrQuery": "{\"aggs\":{\"Department\":{\"terms\":{\"field\":\"Data.hierarchyMap.zone.keyword\"},\"aggs\":{\"Demand\":{\"filter\":{\"terms\":{\"Data.eventType.keyword\":[\"Demand\"]}},\"aggs\":{\"Total\":{\"sum\":{\"field\":\"Data.amountDetails.amount\"}}}},\"Billed\":{\"filter\":{\"terms\":{\"Data.eventType.keyword\":[\"Bill\"]}},\"aggs\":{\"Total\":{\"sum\":{\"field\":\"Data.amountDetails.amount\"}}}},\"total-count-script\":{\"bucket_script\":{\"buckets_path\":{\"demand\":\"Demand>Total\",\"billed\":\"Billed>Total\"},\"script\":\"if(params.demand-params.billed<0){return 1;}\"}}}},\"count\":{\"sum_bucket\":{\"buckets_path\":\"Department>total-count-script\"}}}}",
         "requestQueryMap": "{\"wardId\" : \"domainObject.ward.name.keyword\",\r\n  \"module\" : \"dataObject.paymentDetails.businessService.keyword\", \n\"tenantId\" : \"dataObject.tenantId\"}",
         "dateRefField": "Data.eventTime"
       }
     ],
     "chartType": "metric",
-    "valueType": "amount",
+    "valueType": "number",
     "action": "",
     "drillChart": "none",
     "aggregationPaths": [
-      "totalOutstandingAmount"
+      "count"
     ],
     "insight": {
     },
@@ -7301,7 +7301,7 @@
       }
     ],
     "chartType": "metric",
-    "valueType": "amount",
+    "valueType": "number",
     "action": "",
     "drillChart": "none",
     "aggregationPaths": [
@@ -7384,6 +7384,149 @@
     },
     "_comment": ""
   },
+  "dssIfixCollectionsAndExpenditureActual": {
+    "chartName": "DSS_IFIX_COLLECTIONS_AND_EXPENDITURE_ACTUAL",
+    "queries": [
+      {
+        "module": "IFIX",
+        "dateRefField": "Data.eventTime",
+        "requestQueryMap": "{\"wardId\" : \"Data.ward.name.keyword\", \"tenantId\" : \"Data.tenantData.code\" ,  \"district\" : \"Data.tenantData.city.districtCode\"}",
+        "indexName": "ifix-fiscal-events",
+        "aggrQuery": "{\"aggs\":{\"Current Demand\":{\"date_histogram\":{\"field\":\"Data.eventTime\",\"interval\":\"month\"},\"aggs\":{\"currentDemandAmount\":{\"sum\":{\"script\":{\"lang\":\"painless\",\"source\":\"long currentDemandAmount=0;if(params['_source']['Data']['eventType']=='Demand' || params['_source']['Data']['eventType']=='Bill'){String currentEventTimeString=params['_source']['Data']['eventTime'];long currentEventTime=Long.parseLong(currentEventTimeString);for(int i=0;i<params['_source']['Data']['amountDetails'].length;++i){if(currentEventTime>=Long.parseLong(params['_source']['Data']['amountDetails'][i]['fromBillingPeriod'])&&currentEventTime<=Long.parseLong(params['_source']['Data']['amountDetails'][i]['toBillingPeriod'])){currentDemandAmount=currentDemandAmount+params['_source']['Data']['amountDetails'][i]['amount'];}}}return  currentDemandAmount;\"}}}}},\"Arrear Demand\":{\"date_histogram\":{\"field\":\"Data.eventTime\",\"interval\":\"month\"},\"aggs\":{\"arrearDemandAmount\":{\"sum\":{\"script\":{\"lang\":\"painless\",\"source\":\"long currentDemandAmount=0;if(params['_source']['Data']['eventType']=='Receipt'){String currentEventTimeString=params['_source']['Data']['eventTime'];long currentEventTime=Long.parseLong(currentEventTimeString);for(int i=0;i<params['_source']['Data']['amountDetails'].length;++i){if(currentEventTime>Long.parseLong(params['_source']['Data']['amountDetails'][i]['toBillingPeriod'])){currentDemandAmount=currentDemandAmount+params['_source']['Data']['amountDetails'][i]['amount'];}}}return currentDemandAmount;\"}}}}},\"Current Bill\":{\"date_histogram\":{\"field\":\"Data.eventTime\",\"interval\":\"month\"},\"aggs\":{\"currentBillAmount\":{\"sum\":{\"script\":{\"lang\":\"painless\",\"source\":\"long currentBillAmount=0;if(params['_source']['Data']['eventType']=='Payment'){String currentEventTimeString=params['_source']['Data']['eventTime'];long currentEventTime=Long.parseLong(currentEventTimeString);for(int i=0;i<params['_source']['Data']['amountDetails'].length;++i){if(currentEventTime<=Long.parseLong(params['_source']['Data']['amountDetails'][i]['toBillingPeriod']) && currentEventTime>=Long.parseLong(params['_source']['Data']['amountDetails'][i]['fromBillingPeriod'])){currentBillAmount=currentBillAmount+params['_source']['Data']['amountDetails'][i]['amount'];}}}return currentBillAmount;\"}}}}},\"Old Bill\":{\"date_histogram\":{\"field\":\"Data.eventTime\",\"interval\":\"month\"},\"aggs\":{\"oldBillAmount\":{\"sum\":{\"script\":{\"lang\":\"painless\",\"source\":\"long currentBillAmount=0;if(params['_source']['Data']['eventType']=='Payment'){String currentEventTimeString=params['_source']['Data']['eventTime'];long currentEventTime=Long.parseLong(currentEventTimeString);for(int i=0;i<params['_source']['Data']['amountDetails'].length;++i){if(currentEventTime>Long.parseLong(params['_source']['Data']['amountDetails'][i]['toBillingPeriod'])){currentBillAmount=currentBillAmount+params['_source']['Data']['amountDetails'][i]['amount'];}}}return currentBillAmount;\"}}}}}}}"
+
+      }
+    ],
+    "chartType": "line",
+    "valueType": "number",
+    "action": "",
+    "drillChart": "none",
+    "documentType": "_doc",
+    "aggregationPaths": [
+      "Current Demand",
+      "Arrear Demand",
+      "Current Bill",
+      "Old Bill"
+    ],
+    "isCumulative": false,
+    "interval": "month",
+    "insight": {
+    },
+    "_comment": " "
+  },
+  "dssIfixExpenditureComposition": {
+    "chartName": "DSS_IFIX_EXPENDITURE_COMPOSITION",
+    "queries": [
+      {
+        "module": "IFIX",
+        "dateRefField": "Data.eventTime",
+        "requestQueryMap": "{\"wardId\" : \"Data.ward.name.keyword\", \"tenantId\" : \"Data.tenantData.code\" ,  \"district\" : \"Data.tenantData.city.districtCode\"}",
+        "indexName": "ifix-fiscal-events",
+        "aggrQuery": "{\"aggs\":{\"AGGR\":{\"filter\":{\"bool\":{\"must_not\":[{\"terms\":{\"Data.eventType.keyword\":[\"Demand\",\"Receipt\",\"Bill\"]}}]}},\"aggs\":{\"Expense\":{\"date_histogram\":{\"field\":\"Data.eventTime\",\"interval\":\"month\"},\"aggs\":{\"Collection By Expenditure\":{\"terms\":{\"field\":\"Data.attributes.expenditure.code.keyword\"},\"aggs\":{\"Amount\":{\"sum\":{\"field\":\"Data.amountDetails.amount\"}}}}}}}}}}"
+      }
+    ],
+    "chartType": "line",
+    "valueType": "number",
+    "action": "",
+    "drillChart": "none",
+    "documentType": "_doc",
+    "aggregationPaths": [
+      "Collection By Expenditure"
+    ],
+    "isCumulative": false,
+    "interval": "month",
+    "insight": {
+    },
+    "_comment": " "
+  },
+  "dssIfixDemandAndBillMetricsByZone": {
+    "chartName": "DSS_IFIX_DEMAND_AND_BILL_METRICS_BY_ZONE",
+    "queries": [
+      {
+        "module": "IFIX",
+        "requestQueryMap": "{\"ward\" : \"ward.keyword\",\"ulb\" : \"ulb.keyword\"}",
+        "dateRefField": "Data.eventTime",
+        "indexName": "ifix-fiscal-events",
+        "aggrQuery": "{\"aggs\":{\"Department\":{\"terms\":{\"field\":\"Data.hierarchyMap.zone.keyword\"},\"aggs\":{\"Demand\":{\"filter\":{\"terms\":{\"Data.eventType.keyword\":[\"Demand\"]}},\"aggs\":{\"Total\":{\"sum\":{\"field\":\"Data.amountDetails.amount\"}}}},\"Billed\":{\"filter\":{\"terms\":{\"Data.eventType.keyword\":[\"Bill\"]}},\"aggs\":{\"Total\":{\"sum\":{\"field\":\"Data.amountDetails.amount\"}}}},\"Collections\":{\"filter\":{\"terms\":{\"Data.eventType.keyword\":[\"Receipt\"]}},\"aggs\":{\"Total\":{\"sum\":{\"field\":\"Data.amountDetails.amount\"}}}},\"Paid\":{\"filter\":{\"terms\":{\"Data.eventType.keyword\":[\"Payment\"]}},\"aggs\":{\"Total\":{\"sum\":{\"field\":\"Data.amountDetails.amount\"}}}}}}}}"
+      }
+    ],
+    "isMdmsEnabled": false,
+    "chartType": "table",
+    "valueType": "number",
+    "action": "",
+    "plotLabel": "Zone",
+    "isPostResponseHandler": true,
+    "postAggregationTheory" : "repsonseToDifferenceOfDates",
+    "documentType": "_doc",
+    "drillChart": "none",
+    "aggregationPaths": [
+      "Demand",
+      "Billed",
+      "Collections",
+      "Paid"
+    ],
+    "pathDataTypeMapping": [
+      {
+        "Demand": "amount"
+      },
+      {
+        "Billed": "amount"
+      },
+      {
+        "Collections": "amount"
+      },
+      {
+        "Paid": "amount"
+      }
+    ],
+    "insight": {
+    },
+    "_comment": ""
+  },
+  "dssIfixUnderperformingGPWSCs": {
+    "chartName": "DSS_IFIX_UNDERPERFORMING_GPWSCS",
+    "queries": [
+      {
+        "module": "IFIX",
+        "requestQueryMap": "{\"ward\" : \"ward.keyword\",\"ulb\" : \"ulb.keyword\"}",
+        "dateRefField": "Data.eventTime",
+        "indexName": "ifix-fiscal-events",
+        "aggrQuery": "{\"aggs\":{\"Department\":{\"terms\":{\"field\":\"Data.hierarchyMap.zone.keyword\"},\"aggs\":{\"Demand\":{\"filter\":{\"terms\":{\"Data.eventType.keyword\":[\"Demand\"]}},\"aggs\":{\"Total\":{\"sum\":{\"field\":\"Data.amountDetails.amount\"}}}},\"Billed\":{\"filter\":{\"terms\":{\"Data.eventType.keyword\":[\"Bill\"]}},\"aggs\":{\"Total\":{\"sum\":{\"field\":\"Data.amountDetails.amount\"}}}},\"Collections\":{\"filter\":{\"terms\":{\"Data.eventType.keyword\":[\"Receipt\"]}},\"aggs\":{\"Total\":{\"sum\":{\"field\":\"Data.amountDetails.amount\"}}}},\"Paid\":{\"filter\":{\"terms\":{\"Data.eventType.keyword\":[\"Payment\"]}},\"aggs\":{\"Total\":{\"sum\":{\"field\":\"Data.amountDetails.amount\"}}}},\"comparator_script\":{\"bucket_script\":{\"buckets_path\":{\"bill\":\"Billed>Total\",\"paid\":\"Paid>Total\",\"demand\":\"Demand>Total\",\"collection\":\"Collections>Total\"},\"script\":\"Math.max(params.bill-params.paid,params.demand-params.collection)\"}},\"sales_bucket_sort\":{\"bucket_sort\":{\"sort\":[{\"comparator_script\":{\"order\":\"asc\"}}]}}}}}}"
+      }
+    ],
+    "isMdmsEnabled": false,
+    "chartType": "table",
+    "valueType": "number",
+    "action": "",
+    "plotLabel": "GPWSCS",
+    "isPostResponseHandler": true,
+    "postAggregationTheory" : "repsonseToDifferenceOfDates",
+    "documentType": "_doc",
+    "drillChart": "none",
+    "aggregationPaths": [
+      "Demand",
+      "Billed",
+      "Collections",
+      "Paid"
+    ],
+    "pathDataTypeMapping": [
+      {
+        "Demand": "amount"
+      },
+      {
+        "Billed": "amount"
+      },
+      {
+        "Collections": "amount"
+      },
+      {
+        "Paid": "amount"
+      }
+    ],
+    "insight": {
+    },
+    "_comment": ""
+  },
+
 
 
   "nocTotalCollection": {
